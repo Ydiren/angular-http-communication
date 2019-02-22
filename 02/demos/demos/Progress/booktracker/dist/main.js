@@ -325,6 +325,50 @@ var AppModule = /** @class */ (function () {
 
 /***/ }),
 
+/***/ "./src/app/core/add-header.interceptor.ts":
+/*!************************************************!*\
+  !*** ./src/app/core/add-header.interceptor.ts ***!
+  \************************************************/
+/*! exports provided: AddHeaderInterceptor */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AddHeaderInterceptor", function() { return AddHeaderInterceptor; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+var AddHeaderInterceptor = /** @class */ (function () {
+    function AddHeaderInterceptor() {
+    }
+    AddHeaderInterceptor.prototype.intercept = function (req, next) {
+        console.log("AddHeaderInterceptor - " + req.url);
+        var jsonReq = req.clone({
+            setHeaders: { 'Content-Type': 'application/json' }
+        });
+        return next.handle(jsonReq);
+    };
+    AddHeaderInterceptor = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])({
+            providedIn: 'root'
+        }),
+        __metadata("design:paramtypes", [])
+    ], AddHeaderInterceptor);
+    return AddHeaderInterceptor;
+}());
+
+
+
+/***/ }),
+
 /***/ "./src/app/core/book-resolver.service.ts":
 /*!***********************************************!*\
   !*** ./src/app/core/book-resolver.service.ts ***!
@@ -416,6 +460,76 @@ var BookTrackerErrorHandlerService = /** @class */ (function () {
 
 /***/ }),
 
+/***/ "./src/app/core/cache.interceptor.ts":
+/*!*******************************************!*\
+  !*** ./src/app/core/cache.interceptor.ts ***!
+  \*******************************************/
+/*! exports provided: CacheInterceptor */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CacheInterceptor", function() { return CacheInterceptor; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/fesm5/http.js");
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
+/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
+/* harmony import */ var app_services_http_cache_service__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! app/services/http-cache.service */ "./src/app/services/http-cache.service.ts");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+var CacheInterceptor = /** @class */ (function () {
+    function CacheInterceptor(cacheService) {
+        this.cacheService = cacheService;
+    }
+    CacheInterceptor.prototype.intercept = function (req, next) {
+        var _this = this;
+        // pass along non-cacheable requests and invalidate cache
+        if (req.method !== 'GET') {
+            console.log("Invalidating cache: " + req.method + " " + req.url);
+            this.cacheService.invalidateCache();
+            return next.handle(req);
+        }
+        // attempt to retrieve a cached response
+        var cachedResponse = this.cacheService.get(req.url);
+        // return cached response
+        if (cachedResponse) {
+            console.log("Returning cached response: " + cachedResponse.url);
+            console.log(cachedResponse);
+            return Object(rxjs__WEBPACK_IMPORTED_MODULE_2__["of"])(cachedResponse);
+        }
+        // send request to server and add response to cache
+        return next.handle(req).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_3__["tap"])(function (event) {
+            if (event instanceof _angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpResponse"]) {
+                console.log("Adding item to cache " + req.url);
+                _this.cacheService.put(req.url, event);
+            }
+        }));
+    };
+    CacheInterceptor = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])({
+            providedIn: 'root'
+        }),
+        __metadata("design:paramtypes", [app_services_http_cache_service__WEBPACK_IMPORTED_MODULE_4__["HttpCacheService"]])
+    ], CacheInterceptor);
+    return CacheInterceptor;
+}());
+
+
+
+/***/ }),
+
 /***/ "./src/app/core/core.module.ts":
 /*!*************************************!*\
   !*** ./src/app/core/core.module.ts ***!
@@ -428,10 +542,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CoreModule", function() { return CoreModule; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
 /* harmony import */ var _angular_common__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/common */ "./node_modules/@angular/common/fesm5/common.js");
-/* harmony import */ var _logger_service__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./logger.service */ "./src/app/core/logger.service.ts");
-/* harmony import */ var _data_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./data.service */ "./src/app/core/data.service.ts");
-/* harmony import */ var app_core_module_import_guard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! app/core/module-import-guard */ "./src/app/core/module-import-guard.ts");
-/* harmony import */ var _book_tracker_error_handler_service__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./book-tracker-error-handler.service */ "./src/app/core/book-tracker-error-handler.service.ts");
+/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/fesm5/http.js");
+/* harmony import */ var _logger_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./logger.service */ "./src/app/core/logger.service.ts");
+/* harmony import */ var _data_service__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./data.service */ "./src/app/core/data.service.ts");
+/* harmony import */ var app_core_module_import_guard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! app/core/module-import-guard */ "./src/app/core/module-import-guard.ts");
+/* harmony import */ var _book_tracker_error_handler_service__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./book-tracker-error-handler.service */ "./src/app/core/book-tracker-error-handler.service.ts");
+/* harmony import */ var app_core_add_header_interceptor__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! app/core/add-header.interceptor */ "./src/app/core/add-header.interceptor.ts");
+/* harmony import */ var _log_response_interceptor__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./log-response.interceptor */ "./src/app/core/log-response.interceptor.ts");
+/* harmony import */ var _cache_interceptor__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./cache.interceptor */ "./src/app/core/cache.interceptor.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -450,9 +568,13 @@ var __param = (undefined && undefined.__param) || function (paramIndex, decorato
 
 
 
+
+
+
+
 var CoreModule = /** @class */ (function () {
     function CoreModule(parentModule) {
-        Object(app_core_module_import_guard__WEBPACK_IMPORTED_MODULE_4__["throwIfAlreadyLoaded"])(parentModule, 'CoreModule');
+        Object(app_core_module_import_guard__WEBPACK_IMPORTED_MODULE_5__["throwIfAlreadyLoaded"])(parentModule, 'CoreModule');
     }
     CoreModule = __decorate([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["NgModule"])({
@@ -461,9 +583,12 @@ var CoreModule = /** @class */ (function () {
             ],
             declarations: [],
             providers: [
-                _logger_service__WEBPACK_IMPORTED_MODULE_2__["LoggerService"],
-                _data_service__WEBPACK_IMPORTED_MODULE_3__["DataService"],
-                { provide: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ErrorHandler"], useClass: _book_tracker_error_handler_service__WEBPACK_IMPORTED_MODULE_5__["BookTrackerErrorHandlerService"] }
+                _logger_service__WEBPACK_IMPORTED_MODULE_3__["LoggerService"],
+                _data_service__WEBPACK_IMPORTED_MODULE_4__["DataService"],
+                { provide: _angular_core__WEBPACK_IMPORTED_MODULE_0__["ErrorHandler"], useClass: _book_tracker_error_handler_service__WEBPACK_IMPORTED_MODULE_6__["BookTrackerErrorHandlerService"] },
+                { provide: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HTTP_INTERCEPTORS"], useClass: app_core_add_header_interceptor__WEBPACK_IMPORTED_MODULE_7__["AddHeaderInterceptor"], multi: true },
+                { provide: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HTTP_INTERCEPTORS"], useClass: _log_response_interceptor__WEBPACK_IMPORTED_MODULE_8__["LogResponseInterceptor"], multi: true },
+                { provide: _angular_common_http__WEBPACK_IMPORTED_MODULE_2__["HTTP_INTERCEPTORS"], useClass: _cache_interceptor__WEBPACK_IMPORTED_MODULE_9__["CacheInterceptor"], multi: true },
             ]
         }),
         __param(0, Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Optional"])()), __param(0, Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["SkipSelf"])()),
@@ -571,6 +696,55 @@ var DataService = /** @class */ (function () {
         __metadata("design:paramtypes", [_angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpClient"]])
     ], DataService);
     return DataService;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/core/log-response.interceptor.ts":
+/*!**************************************************!*\
+  !*** ./src/app/core/log-response.interceptor.ts ***!
+  \**************************************************/
+/*! exports provided: LogResponseInterceptor */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LogResponseInterceptor", function() { return LogResponseInterceptor; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/fesm5/http.js");
+/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+var LogResponseInterceptor = /** @class */ (function () {
+    function LogResponseInterceptor() {
+    }
+    LogResponseInterceptor.prototype.intercept = function (req, next) {
+        console.log("LogReponseInterceptor - " + req.url);
+        return next.handle(req).pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_2__["tap"])(function (event) {
+            if (event.type === _angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpEventType"].Response) {
+                console.log(event.body);
+            }
+        }));
+    };
+    LogResponseInterceptor = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])({
+            providedIn: 'root'
+        }),
+        __metadata("design:paramtypes", [])
+    ], LogResponseInterceptor);
+    return LogResponseInterceptor;
 }());
 
 
@@ -950,6 +1124,56 @@ var BadgeService = /** @class */ (function () {
         __metadata("design:paramtypes", [])
     ], BadgeService);
     return BadgeService;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/services/http-cache.service.ts":
+/*!************************************************!*\
+  !*** ./src/app/services/http-cache.service.ts ***!
+  \************************************************/
+/*! exports provided: HttpCacheService */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "HttpCacheService", function() { return HttpCacheService; });
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (undefined && undefined.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+var HttpCacheService = /** @class */ (function () {
+    function HttpCacheService() {
+        this.requests = {};
+    }
+    HttpCacheService.prototype.put = function (url, response) {
+        this.requests[url] = response;
+    };
+    HttpCacheService.prototype.get = function (url) {
+        return this.requests[url];
+    };
+    HttpCacheService.prototype.invalidateUrl = function (url) {
+        this.requests[url] = undefined;
+    };
+    HttpCacheService.prototype.invalidateCache = function () {
+        this.requests = {};
+    };
+    HttpCacheService = __decorate([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Injectable"])({
+            providedIn: 'root'
+        }),
+        __metadata("design:paramtypes", [])
+    ], HttpCacheService);
+    return HttpCacheService;
 }());
 
 
